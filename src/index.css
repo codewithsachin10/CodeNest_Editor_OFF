@@ -1,0 +1,119 @@
+/* ─── Self-hosted fonts (offline-first) ─────────────────────────────────────
+ * Previously loaded from Google Fonts CDN which fails offline.
+ * Now served from @fontsource packages bundled at build time.
+ * Import statements are in main.tsx to keep CSS pure.               */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 3%;
+    --foreground: 220 14% 90%;
+    --card: 222 47% 6%;
+    --card-foreground: 220 14% 90%;
+    --popover: 222 47% 6%;
+    --popover-foreground: 220 14% 90%;
+    --primary: 198 93% 60%;
+    --primary-foreground: 222 47% 3%;
+    --secondary: 217 33% 12%;
+    --secondary-foreground: 220 14% 90%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 217 33% 12%;
+    --accent-foreground: 220 14% 90%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 14% 90%;
+    --border: 217 33% 17%;
+    --input: 217 33% 12%;
+    --ring: 198 93% 60%;
+    --radius: 0.5rem;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --success-light: 142 71% 45% / 0.15;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Professional Scrollbars — Slate tinted */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.12);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.25);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Selection Color — Sky blue */
+  ::selection {
+    background-color: rgba(56, 189, 248, 0.2);
+    color: inherit;
+  }
+}
+
+@layer components {
+  .font-code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+  }
+
+  .monaco-editor .margin {
+    background-color: var(--background) !important;
+  }
+}
+
+@layer utilities {
+  .app-region-drag {
+    -webkit-app-region: drag;
+  }
+
+  .app-region-no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+/* Subtle glow animation for active elements */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(56, 189, 248, 0.2); }
+}
+
+/* Progress bar pulse */
+@keyframes progress-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-progress-pulse {
+  animation: progress-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth focus transitions globally */
+input, select, button, textarea {
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.15s;
+}

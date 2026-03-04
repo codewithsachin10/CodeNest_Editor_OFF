@@ -1,0 +1,144 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CodeNest Studio — electron-builder configuration
+# Production-grade multi-platform installer pipeline
+# ═══════════════════════════════════════════════════════════════════════════════
+
+appId: com.codenest.studio
+productName: CodeNest Studio
+copyright: Copyright © 2025 CodeNest Team
+artifactName: CodeNestStudio-${version}-${os}.${ext}
+
+directories:
+  buildResources: resources
+  output: dist-installers
+
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+  - "!node_modules/**/{test,tests,__tests__}/**"
+  - "!node_modules/**/*.{md,ts,map}"
+  - "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,cflags,c,h,cpp}"
+
+extraMetadata:
+  main: electron/main.cjs
+
+# Exclude dev-only files from the build
+extraFiles:
+  - from: resources/
+    to: resources/
+    filter:
+      - "**/*"
+      - "!README.txt"
+
+# ─── Auto-update publish config ────────────────────────────────────────────
+# Configure your update server here.
+# Option A: Generic static host (Supabase Storage, S3, etc.)
+# Option B: GitHub Releases (uncomment github section)
+# Publish config for electron-updater auto-updates.
+# Set the SUPABASE_URL env var, or replace the URL below with your actual Supabase Storage bucket.
+# The publish-release.mjs script uploads latest.yml / latest-mac.yml / latest-linux.yml here.
+publish:
+  - provider: generic
+    url: ${env.SUPABASE_URL}/storage/v1/object/public/releases
+    channel: latest
+  # - provider: github
+  #   owner: codenest-team
+  #   repo: codenest-studio
+
+# ─── macOS ─────────────────────────────────────────────────────────────────
+mac:
+  category: public.app-category.developer-tools
+  # icon: resources/icon.icns   # Uncomment when you add a real .icns icon
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+
+dmg:
+  title: CodeNest Studio
+  background: resources/dmg-background.png
+  # icon: resources/icon.icns   # Uncomment when you add a real .icns icon
+  sign: false
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# Apple signing & notarization (set env vars in CI):
+#   CSC_LINK=path/to/cert.p12
+#   CSC_KEY_PASSWORD=cert-password
+#   APPLE_ID=your@email.com
+#   APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
+#   APPLE_TEAM_ID=XXXXXXXXXX
+# afterSign: electron-builder-notarize
+
+# ─── Windows ───────────────────────────────────────────────────────────────
+win:
+  # icon: resources/icon.ico   # Uncomment when you add a real .ico icon
+  # Code signing: set CSC_LINK and CSC_KEY_PASSWORD env vars in CI
+  # signingHashAlgorithms: [sha256]
+  # signAndEditExecutable: true
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  # installerIcon: resources/icon.ico       # Uncomment when you add a real .ico icon
+  # uninstallerIcon: resources/icon.ico
+  # installerHeaderIcon: resources/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: CodeNest Studio
+  deleteAppDataOnUninstall: false
+
+# ─── Linux ─────────────────────────────────────────────────────────────────
+linux:
+  # icon: resources/icons   # Uncomment when you add icon PNGs (256x256, 512x512, etc.)
+  executableName: codenest-studio
+  desktop:
+    entry:
+      Name: CodeNest Studio
+      Comment: A beginner-friendly desktop code editor
+      Categories: Development;IDE;TextEditor;
+      Keywords: code;editor;ide;programming;
+  target:
+    - target: AppImage
+    - target: deb
+  category: Development
+
+appImage:
+  artifactName: CodeNestStudio-${version}-linux.AppImage
+
+deb:
+  artifactName: CodeNestStudio-${version}-linux.deb
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+
+# ─── node-pty native module rebuild ────────────────────────────────────────
+# electron-builder will automatically rebuild node-pty for the target Electron ABI
+npmRebuild: true
+nodeGypRebuild: false
+
+# ─── asar archive ──────────────────────────────────────────────────────────
+asar: true
+asarUnpack:
+  - "node_modules/node-pty/**"
+  - "node_modules/@xterm/**"
