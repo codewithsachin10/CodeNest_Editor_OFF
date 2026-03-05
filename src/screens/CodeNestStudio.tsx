@@ -417,7 +417,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
 
             // Spawn PDB
             terminalRef.current?.writeln(`\x1b[36m🐞 Debugging ${activeTab.fileName}...\x1b[0m`);
-            const platform = await api.app.getInfo().then((info: any) => info.platform);
+            const platform = await api.app.getInfo().then(info => info.platform);
             const cmd = platform === 'win32' ? 'python' : 'python3';
 
             const result = await api.pty.spawn({
