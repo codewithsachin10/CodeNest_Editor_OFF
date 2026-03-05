@@ -39,12 +39,12 @@ extraFiles:
 # Set the SUPABASE_URL env var, or replace the URL below with your actual Supabase Storage bucket.
 # The publish-release.mjs script uploads latest.yml / latest-mac.yml / latest-linux.yml here.
 publish:
-  - provider: generic
-    url: ${env.SUPABASE_URL}/storage/v1/object/public/releases
-    channel: latest
-  # - provider: github
-  #   owner: codenest-team
-  #   repo: codenest-studio
+  - provider: github
+    owner: codewithsachin10
+    repo: CodeNest_Editor_OFF
+  # - provider: generic
+  #   url: ${env.SUPABASE_URL}/storage/v1/object/public/releases
+  #   channel: latest
 
 # ─── macOS ─────────────────────────────────────────────────────────────────
 mac:
