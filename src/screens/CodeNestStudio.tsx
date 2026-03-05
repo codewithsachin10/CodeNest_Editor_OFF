@@ -207,19 +207,11 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
 
     // Theme colors — driven by the active theme preset
     const theme = {
+        ...activeTheme.shellColors,
         bg: activeTheme.shellColors.background,
-        sidebar: activeTheme.shellColors.sidebar,
-        activityBar: activeTheme.shellColors.activityBar,
-        editor: activeTheme.shellColors.editor,
-        terminal: activeTheme.shellColors.terminal,
-        border: activeTheme.shellColors.border,
-        accent: activeTheme.shellColors.accent,
         text: activeTheme.shellColors.foreground,
-        textMuted: activeTheme.shellColors.textMuted,
-        success: activeTheme.shellColors.success,
-        error: activeTheme.shellColors.error,
-        warning: activeTheme.shellColors.warning,
     };
+
 
     // Apply theme
     useEffect(() => {
@@ -296,7 +288,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
     useEffect(() => {
         if (!fileSystem.isElectron) return;
 
-        const api = (window as any).electronAPI;
+        const api = window.electronAPI;
 
         // Listen for PTY data
         const removeDataListener = api.pty.onData((data: { id: string; data: string }) => {
@@ -379,7 +371,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
 
     const runDebuggerCommand = (cmd: string) => {
         if (currentPtyId && fileSystem.isElectron) {
-            const api = (window as any).electronAPI;
+            const api = window.electronAPI;
             api.pty.write(currentPtyId, cmd + '\n');
         }
     };
@@ -400,7 +392,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
         startTimeRef.current = Date.now();
 
         if (fileSystem.isElectron) {
-            const api = (window as any).electronAPI;
+            const api = window.electronAPI;
             const file = fileSystem.findNode(fileSystem.files, activeTab.fileId);
 
             if (!file) return;
@@ -581,7 +573,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
     const handleStop = useCallback(async () => {
         if (debugMode && currentPtyId && fileSystem.isElectron) {
             // Debugger uses PTY — kill via PTY API
-            const api = (window as any).electronAPI;
+            const api = window.electronAPI;
             await api.pty.kill(currentPtyId);
             terminalRef.current?.writeln('\r\n\x1b[33m[Debug session stopped by user]\x1b[0m');
             setCurrentPtyId(null);
@@ -632,7 +624,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
             if (!runPath) {
                 // Virtual file — construct a temp path (ExecutionService will save it)
                 try {
-                    const api = (window as any).electronAPI;
+                    const api = window.electronAPI;
                     const tempDir = await api.app.getPath('temp');
                     runPath = `${tempDir}/${file.name}`;
                     runCwd = tempDir;
@@ -643,7 +635,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
 
             if (!runCwd) {
                 try {
-                    const api = (window as any).electronAPI;
+                    const api = window.electronAPI;
                     runCwd = await api.app.getPath('home');
                 } catch { /* ignore */ }
             }
@@ -715,7 +707,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
     // Handle terminal input (for input())
     const handleTerminalData = useCallback((data: string) => {
         if (currentPtyId && fileSystem.isElectron) {
-            const api = (window as any).electronAPI;
+            const api = window.electronAPI;
             api.pty.write(currentPtyId, data);
         }
     }, [currentPtyId, fileSystem.isElectron]);
@@ -910,9 +902,9 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
             >
                 <div className="flex items-center gap-4 app-region-no-drag">
                     <div className="flex items-center gap-1.5">
-                        <button onClick={() => fileSystem.isElectron && (window as any).electronAPI?.window.close()} className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-110" />
-                        <button onClick={() => fileSystem.isElectron && (window as any).electronAPI?.window.minimize()} className="w-3 h-3 rounded-full bg-[#febc2e] hover:brightness-110" />
-                        <button onClick={() => fileSystem.isElectron && (window as any).electronAPI?.window.maximize()} className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-110" />
+                        <button onClick={() => fileSystem.isElectron && window.electronAPI?.window.close()} className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-110" />
+                        <button onClick={() => fileSystem.isElectron && window.electronAPI?.window.minimize()} className="w-3 h-3 rounded-full bg-[#febc2e] hover:brightness-110" />
+                        <button onClick={() => fileSystem.isElectron && window.electronAPI?.window.maximize()} className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-110" />
                     </div>
                     <span className="text-sm font-semibold">🪺 CodeNest Studio</span>
                 </div>
@@ -1322,7 +1314,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                         if (!template) return;
 
                         if (fileSystem.isElectron) {
-                            const api = (window as any).electronAPI;
+                            const api = window.electronAPI;
                             // Create directory
                             try {
                                 await api.fs.mkdir(location);
@@ -1347,7 +1339,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                     }}
                     onBrowse={async () => {
                         if (fileSystem.isElectron) {
-                            const api = (window as any).electronAPI;
+                            const api = window.electronAPI;
                             try {
                                 const result = await api.dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
                                 if (!result.canceled && result.filePaths?.[0]) {
