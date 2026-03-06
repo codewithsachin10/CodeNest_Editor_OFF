@@ -21,7 +21,7 @@ export function parsePythonError(stderr: string): ParsedError {
     const lastLine = lines[lines.length - 1] || '';
 
     // Default parsed error
-    let result: ParsedError = {
+    const result: ParsedError = {
         lineNumber: null,
         columnNumber: null,
         errorType: 'Error',
@@ -229,7 +229,7 @@ function getFriendlyMessage(errorType: string, rawMessage: string, lineNumber: n
 export function parseGccError(stderr: string): ParsedError {
     const lines = stderr.trim().split('\n');
 
-    let result: ParsedError = {
+    const result: ParsedError = {
         lineNumber: null,
         columnNumber: null,
         errorType: 'CompileError',
@@ -311,7 +311,7 @@ function getGccFriendlyMessage(rawMessage: string, lineNumber: number | null): s
 // ═══════════════════════════════════════════════════════════════
 
 export function parseJavacError(stderr: string): ParsedError {
-    let result: ParsedError = {
+    const result: ParsedError = {
         lineNumber: null,
         columnNumber: null,
         errorType: 'CompileError',

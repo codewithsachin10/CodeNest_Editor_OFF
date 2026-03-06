@@ -6,7 +6,8 @@ import {
     searchSnippets,
     type CodeSnippet,
 } from '../utils/snippetLibrary';
-import { getLangIconUrl, defaultFileIcon } from '../utils/languageIcons';
+import { getLangIconUrl } from '../utils/languageIcons';
+import { cn } from '@/lib/utils';
 
 interface SnippetPanelProps {
     isDarkTheme: boolean;
@@ -19,7 +20,7 @@ const languageLabels: Record<string, string> = {
     c: 'C',
     cpp: 'C++',
     java: 'Java',
-    javascript: 'JavaScript',
+    javascript: 'JS',
 };
 
 export function SnippetPanel({ isDarkTheme, currentLanguage, onInsert }: SnippetPanelProps) {
@@ -59,39 +60,36 @@ export function SnippetPanel({ isDarkTheme, currentLanguage, onInsert }: Snippet
         setTimeout(() => setCopiedId(null), 1500);
     };
 
-    const accent = isDarkTheme ? '#38BDF8' : '#0284C7';
-    const bg = isDarkTheme ? '#111827' : '#F1F5F9';
-    const textMuted = isDarkTheme ? '#9CA3AF' : '#64748B';
-    const border = isDarkTheme ? '#1E293B' : '#E2E8F0';
+    const textColor = isDarkTheme ? 'text-[#E5E7EB]' : 'text-slate-800';
+    const mutedColor = isDarkTheme ? 'text-[#9CA3AF]' : 'text-slate-500';
 
     return (
-        <div className="flex flex-col h-full" style={{ backgroundColor: bg }}>
+        <div className={cn("flex flex-col h-full w-full p-4 overflow-y-auto", textColor)}>
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 text-xs font-bold tracking-wider" style={{ color: textMuted }}>
-                <span className="flex items-center gap-1.5">
-                    <Code2 className="w-3.5 h-3.5" />
-                    SNIPPETS
-                </span>
+            <div className="flex items-center gap-2 mb-4 shrink-0">
+                <Code2 className="w-5 h-5 text-sky-400" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400">Snippets</h2>
             </div>
 
             {/* Language Tabs */}
-            <div className="flex items-center gap-1 px-2 pb-2 overflow-x-auto">
+            <div className="flex items-center gap-1 mb-4 overflow-x-auto shrink-0 pb-1 scrollbar-hide">
                 {languages.map(lang => {
                     const label = languageLabels[lang] || lang;
                     const iconUrl = getLangIconUrl(lang);
                     const isActive = lang === selectedLang;
+                    
                     return (
                         <button
                             key={lang}
                             onClick={() => { setSelectedLang(lang); setSearchQuery(''); }}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap transition-colors"
-                            style={{
-                                backgroundColor: isActive ? `${accent}15` : 'transparent',
-                                color: isActive ? accent : textMuted,
-                                border: `1px solid ${isActive ? `${accent}40` : 'transparent'}`,
-                            }}
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                                isActive 
+                                    ? "bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.1)]" 
+                                    : "border-transparent text-slate-500 hover:bg-white/5 hover:text-slate-300"
+                            )}
                         >
-                            <img src={iconUrl} alt="" width={12} height={12} className="shrink-0" draggable={false} />
+                            <img src={iconUrl} alt="" className="w-4 h-4 rounded-sm drop-shadow-md" draggable={false} />
                             {label}
                         </button>
                     );
@@ -99,111 +97,120 @@ export function SnippetPanel({ isDarkTheme, currentLanguage, onInsert }: Snippet
             </div>
 
             {/* Search */}
-            <div className="px-2 pb-2">
-                <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5" style={{ backgroundColor: isDarkTheme ? '#0F172A' : '#E2E8F0' }}>
-                    <Search className="w-3 h-3" style={{ color: textMuted }} />
-                    <input
-                        type="text"
-                        placeholder="Search snippets..."
-                        className="flex-1 bg-transparent text-xs outline-none"
-                        style={{ color: isDarkTheme ? '#E5E7EB' : '#1E293B' }}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+            <div className="relative mb-4 shrink-0">
+                <Search className={cn("w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2", mutedColor)} />
+                <input
+                    type="text"
+                    placeholder="Search templates..."
+                    className={cn(
+                        "w-full text-xs py-2 pl-9 pr-3 rounded-lg border focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all",
+                        isDarkTheme ? "bg-[#0F172A] border-[#1E293B] text-white" : "bg-slate-50 border-slate-200 text-slate-800",
+                        "placeholder:opacity-50"
+                    )}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
             </div>
 
             {/* Snippet List */}
-            <div className="flex-1 overflow-auto px-1">
-                {Object.keys(grouped).length === 0 && (
-                    <div className="text-center py-8 text-xs" style={{ color: textMuted }}>
+            <div className="flex-1 overflow-auto pr-1">
+                {Object.keys(grouped).length === 0 ? (
+                    <div className={cn("text-center py-10 text-xs", mutedColor)}>
                         No snippets found
                     </div>
-                )}
-                {Object.entries(grouped).map(([category, snippets]) => {
-                    const isExpanded = expandedCategories.has(category) || searchQuery.trim().length > 0;
-                    return (
-                        <div key={category} className="mb-1">
-                            <button
-                                onClick={() => toggleCategory(category)}
-                                className="w-full flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold rounded hover:bg-white/5 transition-colors"
-                                style={{ color: isDarkTheme ? '#CBD5E1' : '#475569' }}
-                            >
-                                {isExpanded
-                                    ? <ChevronDown className="w-3 h-3 opacity-50" />
-                                    : <ChevronRight className="w-3 h-3 opacity-50" />
-                                }
-                                {category}
-                                <span className="ml-auto text-[9px] opacity-40">{snippets.length}</span>
-                            </button>
+                ) : (
+                    <div className="space-y-3">
+                        {Object.entries(grouped).map(([category, snippets]) => {
+                            const isExpanded = expandedCategories.has(category) || searchQuery.trim().length > 0;
+                            return (
+                                <div key={category} className="rounded-xl border border-white/5 overflow-hidden">
+                                    <button
+                                        onClick={() => toggleCategory(category)}
+                                        className={cn(
+                                            "w-full flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors",
+                                            isDarkTheme ? "bg-white/[0.03] hover:bg-white/[0.06] text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                        )}
+                                    >
+                                        {isExpanded
+                                            ? <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                                            : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                                        }
+                                        {category}
+                                        <span className={cn("ml-auto text-[10px] px-1.5 rounded-md", isDarkTheme ? "bg-black/50" : "bg-white")}>{snippets.length}</span>
+                                    </button>
 
-                            {isExpanded && (
-                                <div className="ml-2 space-y-0.5">
-                                    {snippets.map(snippet => (
-                                        <div
-                                            key={snippet.id}
-                                            className="group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors hover:bg-white/5"
-                                            onClick={() => setPreviewSnippet(previewSnippet?.id === snippet.id ? null : snippet)}
-                                        >
-                                            <FileCode className="w-3 h-3 shrink-0" style={{ color: accent }} />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-[11px] font-medium truncate" style={{ color: isDarkTheme ? '#E5E7EB' : '#1E293B' }}>
-                                                    {snippet.title}
+                                    {isExpanded && (
+                                        <div className={cn("p-1.5 space-y-1", isDarkTheme ? "bg-black/20" : "bg-white")}>
+                                            {snippets.map(snippet => (
+                                                <div
+                                                    key={snippet.id}
+                                                    className={cn(
+                                                        "group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all border border-transparent",
+                                                        previewSnippet?.id === snippet.id
+                                                            ? (isDarkTheme ? "bg-sky-500/10 border-sky-500/20" : "bg-sky-50 border-sky-200")
+                                                            : (isDarkTheme ? "hover:bg-white/[0.04]" : "hover:bg-slate-50")
+                                                    )}
+                                                    onClick={() => setPreviewSnippet(previewSnippet?.id === snippet.id ? null : snippet)}
+                                                >
+                                                    <FileCode className={cn("w-4 h-4 shrink-0 transition-colors", previewSnippet?.id === snippet.id ? "text-sky-400" : "text-slate-500")} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className={cn("text-xs font-semibold truncate", isDarkTheme ? "text-slate-200" : "text-slate-800")}>
+                                                            {snippet.title}
+                                                        </div>
+                                                        <div className={cn("text-[10px] mt-0.5 truncate", mutedColor)}>
+                                                            {snippet.description}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleInsert(snippet); }}
+                                                        className={cn(
+                                                            "opacity-0 group-hover:opacity-100 p-1.5 rounded-md transition-all shrink-0",
+                                                            copiedId === snippet.id
+                                                                ? "bg-green-500/20 text-green-400"
+                                                                : "bg-sky-500/10 text-sky-400 hover:bg-sky-500/20"
+                                                        )}
+                                                        title="Insert into editor"
+                                                    >
+                                                        {copiedId === snippet.id
+                                                            ? <span className="text-[10px] font-bold block w-3.5 text-center">✓</span>
+                                                            : <Copy className="w-3.5 h-3.5" />
+                                                        }
+                                                    </button>
                                                 </div>
-                                                <div className="text-[9px] truncate" style={{ color: textMuted }}>
-                                                    {snippet.description}
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleInsert(snippet); }}
-                                                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 transition-all shrink-0"
-                                                title="Insert into editor"
-                                                style={{ color: copiedId === snippet.id ? '#22C55E' : accent }}
-                                            >
-                                                {copiedId === snippet.id
-                                                    ? <span className="text-[9px] font-bold">✓</span>
-                                                    : <Copy className="w-3 h-3" />
-                                                }
-                                            </button>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            {/* Preview */}
+            {/* Preview Section */}
             {previewSnippet && (
-                <div className="border-t" style={{ borderColor: border, maxHeight: '40%' }}>
-                    <div className="flex items-center justify-between px-3 py-1.5" style={{ backgroundColor: isDarkTheme ? '#0F172A' : '#E2E8F0' }}>
-                        <span className="text-[10px] font-semibold" style={{ color: isDarkTheme ? '#CBD5E1' : '#475569' }}>
+                <div className={cn("mt-4 shrink-0 rounded-xl border overflow-hidden flex flex-col", isDarkTheme ? "bg-[#0B1120] border-[#1E293B]" : "bg-white border-slate-200")}>
+                    <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDarkTheme ? "bg-[#0F172A] border-[#1E293B]" : "bg-slate-50 border-slate-200")}>
+                        <span className={cn("text-xs font-bold", isDarkTheme ? "text-sky-300" : "text-sky-600")}>
                             {previewSnippet.title}
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleInsert(previewSnippet)}
-                                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors"
-                                style={{ backgroundColor: `${accent}20`, color: accent }}
+                                className="flex items-center gap-1.5 px-3 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-md text-[10px] font-bold transition-colors"
                             >
-                                <Copy className="w-2.5 h-2.5" />
+                                <Copy className="w-3 h-3" />
                                 Insert
                             </button>
                             <button
                                 onClick={() => setPreviewSnippet(null)}
-                                className="p-0.5 rounded hover:bg-white/10 text-[10px]"
-                                style={{ color: textMuted }}
+                                className={cn("p-1 rounded-md transition-colors", isDarkTheme ? "hover:bg-white/10 text-slate-400" : "hover:bg-black/5 text-slate-500")}
                             >
                                 ✕
                             </button>
                         </div>
                     </div>
-                    <pre className="overflow-auto text-[10px] p-2 leading-relaxed" style={{
-                        color: isDarkTheme ? '#E5E7EB' : '#1E293B',
-                        backgroundColor: isDarkTheme ? '#0B1120' : '#F8FAFC',
-                        maxHeight: '150px',
-                    }}>
+                    <pre className="overflow-y-auto text-xs p-3 font-mono leading-relaxed max-h-[160px] scrollbar-thin scrollbar-thumb-sky-500/20">
                         <code>{previewSnippet.code}</code>
                     </pre>
                 </div>

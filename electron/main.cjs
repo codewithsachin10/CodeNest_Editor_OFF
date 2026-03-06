@@ -134,7 +134,7 @@ function createMainWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: false,       // node-pty requires this off
+            sandbox: true,        // PERFORMANCE: Enforced sandbox
             webSecurity: true,    // Enforce same-origin policy
             preload: path.join(__dirname, 'preload.cjs')
         }
@@ -345,6 +345,11 @@ Happy coding! 🚀
                 fs.writeFileSync(filePath, file.content);
             }
         }
+
+        // Auto-initialize Git offline repository
+        const GitManager = require('./core/GitManager.cjs');
+        await GitManager.init(folderPath);
+        await GitManager.commit(folderPath, 'Initial commit');
 
         return { success: true };
     } catch (e) {
@@ -629,6 +634,18 @@ ipcMain.handle('app:getInfo', () => ({
 ipcMain.handle('app:getPath', (event, name) => {
     return app.getPath(name);
 });
+
+// ============================================
+// Mini Offline Git / Version Control
+// ============================================
+
+const GitManager = require('./core/GitManager.cjs');
+
+ipcMain.handle('git:init', (event, path) => GitManager.init(path));
+ipcMain.handle('git:status', (event, path) => GitManager.getStatus(path));
+ipcMain.handle('git:commit', (event, path, msg) => GitManager.commit(path, msg));
+ipcMain.handle('git:log', (event, path) => GitManager.getLog(path));
+ipcMain.handle('git:restore', (event, path, hash) => GitManager.restore(path, hash));
 
 // ============================================
 // PTY (Real Terminal) Handlers

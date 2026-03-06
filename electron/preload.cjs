@@ -140,6 +140,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
         clearToken: () => ipcRenderer.invoke('auth:clearToken'),
     },
 
+    // Mini Offline Git
+    git: {
+        init: (path) => ipcRenderer.invoke('git:init', path),
+        status: (path) => ipcRenderer.invoke('git:status', path),
+        commit: (path, msg) => ipcRenderer.invoke('git:commit', path, msg),
+        log: (path) => ipcRenderer.invoke('git:log', path),
+        restore: (path, hash) => ipcRenderer.invoke('git:restore', path, hash),
+    },
+
     // Auto-Updater
     updater: {
         checkForUpdates: () => ipcRenderer.invoke('updater:checkForUpdates'),

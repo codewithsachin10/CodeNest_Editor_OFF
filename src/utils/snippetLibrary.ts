@@ -1394,7 +1394,7 @@ export function getSnippetsGrouped(language: string): Record<string, CodeSnippet
  */
 export function searchSnippets(query: string, language?: string): CodeSnippet[] {
     const q = query.toLowerCase();
-    let pool = language ? getSnippetsByLanguage(language) : allSnippets;
+    const pool = language ? getSnippetsByLanguage(language) : allSnippets;
     return pool.filter(s =>
         s.title.toLowerCase().includes(q) ||
         s.description.toLowerCase().includes(q) ||

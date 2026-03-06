@@ -8,9 +8,12 @@ productName: CodeNest Studio
 copyright: Copyright © 2025 CodeNest Team
 artifactName: CodeNestStudio-${version}-${os}.${ext}
 
+compression: maximum
+
 directories:
   buildResources: resources
   output: dist-installers
+
 
 files:
   - dist/**/*
@@ -91,11 +94,13 @@ win:
   target:
     - target: nsis
       arch: [x64]
+    - target: portable
+      arch: [x64]
 
 nsis:
-  oneClick: false
+  oneClick: true
   perMachine: false
-  allowToChangeInstallationDirectory: true
+  allowToChangeInstallationDirectory: false
   # installerIcon: resources/icon.ico       # Uncomment when you add a real .ico icon
   # uninstallerIcon: resources/icon.ico
   # installerHeaderIcon: resources/icon.ico

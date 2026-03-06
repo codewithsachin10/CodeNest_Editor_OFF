@@ -1,12 +1,12 @@
 import React from 'react';
-import { Folder, Bug, GraduationCap, GitBranch } from 'lucide-react';
+import { Folder, Bug, GraduationCap, GitBranch, BookOpen } from 'lucide-react';
 import type { ShellColors } from '../themes/themeTypes';
 
 interface ActivityBarProps {
     theme: ShellColors;
     sidebarVisible: boolean;
-    activeSidebarView: 'explorer' | 'debug' | 'snippets' | 'git';
-    setActiveSidebarView: (view: 'explorer' | 'debug' | 'snippets' | 'git') => void;
+    activeSidebarView: 'explorer' | 'debug' | 'snippets' | 'git' | 'docs';
+    setActiveSidebarView: (view: 'explorer' | 'debug' | 'snippets' | 'git' | 'docs') => void;
 }
 
 export function ActivityBar({ theme, sidebarVisible, activeSidebarView, setActiveSidebarView }: ActivityBarProps) {
@@ -37,6 +37,14 @@ export function ActivityBar({ theme, sidebarVisible, activeSidebarView, setActiv
                 aria-label="Code Snippets"
             >
                 <GraduationCap className="w-5 h-5" />
+            </button>
+            <button
+                onClick={() => setActiveSidebarView('docs')}
+                className={`p-2.5 rounded-lg transition-all ${activeSidebarView === 'docs' ? 'bg-sky-400/10 text-sky-400' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                title="Offline Documentation"
+                aria-label="Offline Documentation"
+            >
+                <BookOpen className="w-5 h-5" />
             </button>
             <button
                 onClick={() => setActiveSidebarView('git')}

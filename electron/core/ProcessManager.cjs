@@ -17,9 +17,39 @@
  *   4. Every spawn/kill/exit is logged
  */
 
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
+const os = require('os');
 const { killProcessTree, isProcessAlive } = require('../system/WindowsKillTree.cjs');
 const Logger = require('./Logger.cjs');
+
+// Architecture limits
+const MAX_MEMORY_MB = 256;
+const MAX_MEMORY_BYTES = MAX_MEMORY_MB * 1024 * 1024;
+const MEMORY_POLL_MS = 1000;
+
+function checkProcessMemory(pid) {
+    return new Promise((resolve) => {
+        if (!pid) return resolve(0);
+        if (os.platform() === 'win32') {
+            exec(`wmic process where processid=${pid} get WorkingSetSize`, (err, stdout) => {
+                if (err) return resolve(0);
+                const lines = stdout.trim().split('\n');
+                if (lines.length > 1) {
+                    const bytes = parseInt(lines[1], 10);
+                    if (!isNaN(bytes)) return resolve(bytes);
+                }
+                resolve(0);
+            });
+        } else {
+            exec(`ps -o rss= -p ${pid}`, (err, stdout) => {
+                if (err) return resolve(0);
+                const kb = parseInt(stdout.trim(), 10);
+                if (!isNaN(kb)) return resolve(kb * 1024);
+                resolve(0);
+            });
+        }
+    });
+}
 
 class ProcessManager {
     constructor() {
@@ -129,6 +159,8 @@ class ProcessManager {
             let stderrBuf = '';
             let resolved = false;
 
+            let memoryInterval = null;
+
             // Guard against double-resolve
             const safeResolve = (result) => {
                 if (resolved) return;
@@ -138,8 +170,28 @@ class ProcessManager {
                     clearTimeout(this._timeoutTimer);
                     this._timeoutTimer = null;
                 }
+                if (memoryInterval) {
+                    clearInterval(memoryInterval);
+                    memoryInterval = null;
+                }
                 resolve(result);
             };
+
+            // Start memory watchdog
+            if (proc.pid) {
+                memoryInterval = setInterval(async () => {
+                    if (resolved || killed || !proc.pid) return;
+                    const usedBytes = await checkProcessMemory(proc.pid);
+                    if (usedBytes > MAX_MEMORY_BYTES && !killed) {
+                        killed = true;
+                        Logger.warn('ProcessManager: Memory limit exceeded', {
+                            runId, usedBytes, MAX_MEMORY_BYTES
+                        });
+                        stderrBuf += `\n\n[CodeNest Error: Memory limit exceeded (${MAX_MEMORY_MB}MB)]\n`;
+                        await killProcessTree(proc.pid);
+                    }
+                }, MEMORY_POLL_MS);
+            }
 
             // Output buffer cap — prevents OOM from infinite output loops
             // (e.g., while True: print('x'))

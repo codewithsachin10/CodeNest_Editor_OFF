@@ -165,8 +165,8 @@ export function InstallationScreen({
             await new Promise(r => setTimeout(r, 1000));
             setProgress(100);
         }
-      } catch (e: any) {
-        setDetails(prev => [...prev, `✗ Critical error: ${e.message}`]);
+      } catch (e: unknown) {
+        setDetails(prev => [...prev, `✗ Critical error: ${(e as Error).message}`]);
         setShowTroubleshooting(true);
       }
     };

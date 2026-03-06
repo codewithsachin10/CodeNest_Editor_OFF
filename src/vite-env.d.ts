@@ -43,5 +43,12 @@ interface Window {
       minimize: () => void;
       maximize: () => void;
     };
+    git: {
+      init: (path: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+      status: (path: string) => Promise<{ success: boolean; files?: { status: string; filePath: string }[]; error?: string }>;
+      commit: (path: string, msg: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+      log: (path: string) => Promise<{ success: boolean; commits?: { hash: string; author: string; date: string; message: string }[]; error?: string }>;
+      restore: (path: string, hash: string) => Promise<{ success: boolean; error?: string }>;
+    };
   };
 }

@@ -145,6 +145,24 @@ class ExecutionService {
                 });
             }
 
+            // ─── Step 4.5: Sandbox/Security Validations ──────────
+            // Filesystem Isolation Guard: Prevent running code from system dirs
+            const blockedDirs = ['/system', '/usr', '/etc', '/bin', 'c:\\windows', 'c:\\system32'];
+            const fileLower = request.filePath.toLowerCase();
+            const isBlocked = blockedDirs.some(blocked => fileLower.startsWith(blocked));
+            
+            if (isBlocked) {
+                Logger.error('ExecutionService: Sandbox violation', { filePath: request.filePath });
+                return this._finishRun({
+                    success: false,
+                    stderr: `[Security Error] Execution blocked.\nPath: ${request.filePath}\nCannot execute code inside operating system directories.`,
+                    errorType: 'system',
+                    errorMessage: `Sandbox violation: You cannot execute programs or access code located in system directories. Please move your project to a normal folder.`,
+                    language: language,
+                    startTime,
+                });
+            }
+
             // ─── Step 5: Resolve Compiler/Interpreter Path ───────
             const settings = this._getSettings();
             const langSettings = settings?.languages || {};
@@ -233,7 +251,7 @@ class ExecutionService {
                 runConfig.args || [],
                 {
                     cwd: request.cwd || path.dirname(request.filePath),
-                    timeoutMs: request.timeoutMs || 10000, // Default 10s
+                    timeoutMs: Math.min(request.timeoutMs || 5000, 5000), // STRICT 5s limitation (Sandbox Guard)
                     onStdout: (data) => this._sendToRenderer('execution:stdout', { data }),
                     onStderr: (data) => this._sendToRenderer('execution:stderr', { data }),
                 }

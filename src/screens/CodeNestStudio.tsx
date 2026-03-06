@@ -42,7 +42,9 @@ import {
 import { ActivityBar } from "../components/ActivityBar";
 import { TerminalArea } from "../components/TerminalArea";
 import { CommandPalette } from "../components/CommandPalette";
+import { FileSwitcher } from "../components/FileSwitcher";
 import { GitPanel } from "../components/GitPanel";
+import { OfflineDocs } from "../components/OfflineDocs";
 import { DebugPanel, DebugVariable } from "../components/DebugPanel";
 import { useFileSystem, FileNode, getFileExtension, getLanguageFromExtension } from "../hooks/useFileSystem";
 import { useEditorTabs } from "../hooks/useEditorTabs";
@@ -112,10 +114,11 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
     const [newItemName, setNewItemName] = useState('');
     // showSettings dropdown removed — gear button now opens full SettingsScreen
     const [showCommandPalette, setShowCommandPalette] = useState(false);
+    const [showFileSwitcher, setShowFileSwitcher] = useState(false);
     const [showNewProjectModal, setShowNewProjectModal] = useState(false);
 
     // Sidebar view
-    const [activeSidebarView, setActiveSidebarView] = useState<'explorer' | 'debug' | 'snippets' | 'git'>('explorer');
+    const [activeSidebarView, setActiveSidebarView] = useState<'explorer' | 'debug' | 'snippets' | 'git' | 'docs'>('explorer');
 
     // File search in explorer
     const [fileSearchQuery, setFileSearchQuery] = useState('');
@@ -741,6 +744,10 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                 e.preventDefault();
                 setShowCommandPalette(true);
             }
+            if (isMod && !e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                setShowFileSwitcher(true);
+            }
             if (isMod && e.key === '=') {
                 e.preventDefault();
                 setFontSize(s => Math.min(s + 2, 24));
@@ -854,9 +861,11 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
         { id: 'run', name: 'Run Active File', shortcut: `${MOD}Enter`, icon: Play, action: () => handleRun() },
         { id: 'stop', name: 'Stop Execution', shortcut: 'Esc', icon: Square, action: () => handleStop() },
         { id: 'save', name: 'Save File', shortcut: `${MOD}S`, icon: Save, action: () => handleSave() },
+        { id: 'format', name: 'Format Document', shortcut: `Shift+Alt+F`, icon: Edit3, action: () => editorRef.current?.getAction('editor.action.formatDocument')?.run() },
         { id: 'new_file', name: 'New File', icon: FilePlus, action: () => setShowNewFileInput({ parentId: fileSystem.getRootFolderId(), type: 'file' }) },
         { id: 'new_project', name: 'New Project...', icon: FolderPlus, action: () => setShowNewProjectModal(true) },
         { id: 'open_folder', name: 'Open Folder...', shortcut: `${MOD}O`, icon: FolderOpen, action: () => fileSystem.openWorkspace() },
+        { id: 'quick_open', name: 'Quick Open File', shortcut: `${MOD}P`, icon: Search, action: () => setShowFileSwitcher(true) },
         { id: 'toggle_sidebar', name: 'Toggle Side Bar', shortcut: `${MOD}B`, icon: ChevronRight, action: () => setSidebarVisible(v => !v) },
         { id: 'toggle_terminal', name: 'Toggle Terminal', shortcut: `${MOD}\``, icon: Terminal, action: () => setOutputVisible(v => !v) },
         { id: 'zoom_in', name: 'Zoom In', shortcut: `${MOD}=`, icon: Plus, action: () => setFontSize(s => Math.min(s + 2, 24)) },
@@ -1079,6 +1088,18 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                     </div>
                 )}
 
+                {/* Docs Sidebar View */}
+                {sidebarVisible && activeSidebarView === 'docs' && (
+                    <div className="shrink-0 border-r relative flex flex-col" style={{ width: sidebarWidth, backgroundColor: theme.sidebar, borderColor: theme.border }}>
+                        <OfflineDocs />
+                        {/* Resizer Handle */}
+                        <div
+                            className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 z-20"
+                            onMouseDown={(e) => handleMouseDown(e, 'sidebar')}
+                        />
+                    </div>
+                )}
+
                 {/* Editor + Terminal */}
                 <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Tabs */}
@@ -1126,13 +1147,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                                     fontSize: settings.editor.fontSize,
                                     fontFamily: settings.editor.fontFamily,
                                     fontLigatures: false,
-                                    minimap: { 
-                                        enabled: settings.editor.minimap, 
-                                        maxColumn: 80,
-                                        renderCharacters: false,
-                                        scale: 0.9,
-                                        showSlider: 'always'
-                                    },
+                                    minimap: { enabled: false }, // PERFORMANCE: Disabled minimap
                                     find: {
                                         addExtraSpaceOnTop: false,
                                         autoFindInSelection: 'always',
@@ -1148,6 +1163,7 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                                     automaticLayout: true,
                                     wordWrap: settings.editor.wordWrap,
                                     lineHeight: Math.round(settings.editor.fontSize * settings.editor.lineHeight),
+                                    inlayHints: { enabled: 'off' }, // PERFORMANCE: Disabled inline hints
                                     renderLineHighlight: settings.editor.highlightActiveLine ? 'line' : 'none',
                                     glyphMargin: false,
                                     folding: true,
@@ -1282,6 +1298,22 @@ export function CodeNestStudio({ onBack, onOpenSettings, selectedLanguages = [] 
                 isOpen={showCommandPalette}
                 onClose={() => setShowCommandPalette(false)}
                 commands={commands}
+            />
+
+            <FileSwitcher
+                isOpen={showFileSwitcher}
+                onClose={() => setShowFileSwitcher(false)}
+                files={fileSystem.files}
+                onSelect={(file) => {
+                    if (file.content !== undefined) {
+                        editorTabs.openTab({
+                            fileName: file.name,
+                            content: file.content,
+                            fileId: file.id,
+                            language: getLanguageFromExtension(getFileExtension(file.name)),
+                        });
+                    }
+                }}
             />
 
             {/* Tab Context Menu */}
